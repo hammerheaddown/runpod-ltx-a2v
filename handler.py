@@ -181,10 +181,11 @@ def get_pipeline(mode: str, loras: list[dict]):
             )]
             log.info("loading A2VidPipelineTwoStage")
             pipe = A2VidPipelineTwoStage(
-                distilled_checkpoint_path=str(DISTILLED_CHECKPOINT),
+                checkpoint_path=str(DISTILLED_CHECKPOINT),
+                distilled_lora=distilled_lora,
                 spatial_upsampler_path=str(SPATIAL_UPSAMPLER),
                 gemma_root=str(GEMMA_ROOT),
-                distilled_lora=distilled_lora,
+                loras=[],
                 quantization=QuantizationPolicy.fp8_cast(),
             )
         elif mode == "video":
