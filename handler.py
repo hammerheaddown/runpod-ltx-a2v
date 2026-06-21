@@ -290,6 +290,16 @@ def _run_a2v(inp: dict) -> dict:
     num_frames = ((num_frames - 1 + 7) // 8) * 8 + 1  # snap to 8k+1
 
     pipe = get_pipeline("a2v", [])
+    # A2V's audio VAE expects stereo (2-channel) mel-spec input. Force-convert
+    # via ffmpeg in case the input is mono (InfiniteTalk previews often are).
+    stereo_audio = work / "audio_stereo.wav"
+    import subprocess as _sp
+    _sp.run(
+        ["ffmpeg", "-y", "-v", "error", "-i", str(audio_path),
+         "-ac", "2", "-ar", "44100", str(stereo_audio)],
+        check=True,
+    )
+    audio_path = stereo_audio
     # A2V signature wants raw (path, frame_idx, strength) tuples, not ImageConditioningInput.
     images = [(str(image_path), 0, 1.0)]
 
