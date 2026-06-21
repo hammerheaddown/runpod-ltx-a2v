@@ -43,7 +43,8 @@ RUN mkdir -p /opt/LTX-2 \
     && git remote add origin https://github.com/Lightricks/LTX-2.git \
     && git fetch --depth 1 origin ${LTX_COMMIT_SHA} \
     && git checkout ${LTX_COMMIT_SHA} \
-    && pip install --no-cache-dir --force-reinstall --no-deps -e \
+    && pip install --no-cache-dir uv \
+    && pip install --no-cache-dir --no-build-isolation --force-reinstall --no-deps -e \
         /opt/LTX-2/packages/ltx-core \
         -e /opt/LTX-2/packages/ltx-pipelines
 
