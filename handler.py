@@ -290,16 +290,17 @@ def _run_a2v(inp: dict) -> dict:
     num_frames = ((num_frames - 1 + 7) // 8) * 8 + 1  # snap to 8k+1
 
     pipe = get_pipeline("a2v", [])
-    # A2V's audio VAE expects stereo (2-channel) mel-spec input. Force-convert
-    # via ffmpeg in case the input is mono (InfiniteTalk previews often are).
-    stereo_audio = work / "audio_stereo.wav"
+    # A2V's audio VAE requires a compressed codec (FLAC/AAC/MP3/Vorbis/Opus).
+    # PCM-encoded WAV is explicitly unsupported per Lightricks's docs and
+    # crashes the worker with SIGSEGV. Convert to stereo FLAC (lossless).
+    flac_audio = work / "audio.flac"
     import subprocess as _sp
     _sp.run(
         ["ffmpeg", "-y", "-v", "error", "-i", str(audio_path),
-         "-ac", "2", "-ar", "44100", str(stereo_audio)],
+         "-ac", "2", "-ar", "44100", "-c:a", "flac", str(flac_audio)],
         check=True,
     )
-    audio_path = stereo_audio
+    audio_path = flac_audio
     # Signature type hint says tuple but internal code uses img.path — use ImageConditioningInput.
     from ltx_pipelines.utils.args import ImageConditioningInput
     images = [ImageConditioningInput(path=str(image_path), frame_idx=0, strength=1.0)]
