@@ -32,9 +32,12 @@ MODELS_ROOT = Path(os.environ.get("LTX_MODELS_ROOT", "/runpod-volume/models"))
 LORAS_DIR = Path(os.environ.get("LTX_LORAS_DIR", "/runpod-volume/loras"))
 
 DISTILLED_CHECKPOINT = MODELS_ROOT / "ltx-2.3-22b-distilled-1.1.safetensors"
+# A2V uses the DEV (base) checkpoint, NOT the distilled one. The distilled
+# capability gets applied as a LoRA at Stage 2 via `distilled_lora` instead.
+DEV_CHECKPOINT = MODELS_ROOT / "ltx-2.3-22b-dev.safetensors"
 SPATIAL_UPSAMPLER = MODELS_ROOT / "ltx-2.3-spatial-upscaler-x2-1.1.safetensors"
 GEMMA_ROOT = MODELS_ROOT / "gemma-3-12b-it-qat-q4_0-unquantized"
-# Stage-2 LoRA used by A2VidPipelineTwoStage (per Lightricks blog).
+# Distilled LoRA applied at Stage 2 by A2VidPipelineTwoStage (per Lightricks blog).
 STAGE2_DISTILLED_LORA = MODELS_ROOT / "ltx-2.3-22b-distilled-lora-384-1.1.safetensors"
 
 DEFAULT_FRAME_RATE = 24.0
@@ -180,9 +183,11 @@ def get_pipeline(mode: str, loras: list[dict]):
             distilled_lora = [LoraPathStrengthAndSDOps(
                 str(STAGE2_DISTILLED_LORA), 0.8, LTXV_LORA_COMFY_RENAMING_MAP,
             )]
+            if not DEV_CHECKPOINT.exists():
+                raise FileNotFoundError(f"missing DEV checkpoint: {DEV_CHECKPOINT}")
             log.info("loading A2VidPipelineTwoStage")
             pipe = A2VidPipelineTwoStage(
-                checkpoint_path=str(DISTILLED_CHECKPOINT),
+                checkpoint_path=str(DEV_CHECKPOINT),
                 distilled_lora=distilled_lora,
                 spatial_upsampler_path=str(SPATIAL_UPSAMPLER),
                 gemma_root=str(GEMMA_ROOT),

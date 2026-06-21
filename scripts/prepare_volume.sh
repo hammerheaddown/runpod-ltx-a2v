@@ -40,6 +40,8 @@ hf_repo() {
 
 # Core LTX-2.3
 hf_file "Lightricks/LTX-2.3" "ltx-2.3-22b-distilled-1.1.safetensors"          "$MODELS"
+# DEV (base) checkpoint — required by A2VidPipelineTwoStage. ~22 GB.
+hf_file "Lightricks/LTX-2.3" "ltx-2.3-22b-dev.safetensors"                    "$MODELS"
 hf_file "Lightricks/LTX-2.3" "ltx-2.3-spatial-upscaler-x2-1.1.safetensors"    "$MODELS"
 hf_file "Lightricks/LTX-2.3" "ltx-2.3-22b-distilled-lora-384-1.1.safetensors" "$MODELS"
 
