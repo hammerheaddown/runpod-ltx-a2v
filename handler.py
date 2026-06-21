@@ -1,4 +1,5 @@
 """RunPod Serverless worker for LTX-2.3.
+# cache-bust: force COPY re-run
 
 Two modes:
   - "a2v":   talking-head avatar from audio + image + prompt (A2VidPipelineTwoStage).
@@ -202,14 +203,18 @@ def get_pipeline(mode: str, loras: list[dict]):
             raise ValueError(f"unknown mode: {mode}")
 
         # Preload components so first request doesn't pay it.
-        ledger = pipe.model_ledger
-        for fn in ("transformer", "video_encoder", "video_decoder", "audio_decoder",
-                   "vocoder", "spatial_upsampler", "text_encoder",
-                   "gemma_embeddings_processor"):
-            try:
-                getattr(ledger, fn)()
-            except AttributeError:
-                pass
+        # Only DistilledPipeline exposes `model_ledger`; A2VidPipelineTwoStage
+        # structures its components as direct attributes (stage_1, stage_2, etc.)
+        # and lazy-loads them on first call, so we skip preload there.
+        ledger = getattr(pipe, "model_ledger", None)
+        if ledger is not None:
+            for fn in ("transformer", "video_encoder", "video_decoder", "audio_decoder",
+                       "vocoder", "spatial_upsampler", "text_encoder",
+                       "gemma_embeddings_processor"):
+                try:
+                    getattr(ledger, fn)()
+                except AttributeError:
+                    pass
 
         _active = {"key": key, "pipeline": pipe}
         log.info("pipeline ready (key=%s)", key)
