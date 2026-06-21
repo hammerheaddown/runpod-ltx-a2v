@@ -261,7 +261,7 @@ def _encode_video_and_audio(video, audio, output_path: str, fps: float, num_fram
 
 def _run_a2v(inp: dict) -> dict:
     """A2V: audio_url + image_url + prompt → talking avatar."""
-    from ltx_pipelines.utils.args import ImageConditioningInput
+    from ltx_core.components.guiders import MultiModalGuiderParams
 
     work = Path(tempfile.mkdtemp(prefix="a2v_"))
     audio_path = _resolve_asset(inp, "audio_url", "audio_b64", work / "audio.wav")
@@ -290,14 +290,20 @@ def _run_a2v(inp: dict) -> dict:
     num_frames = ((num_frames - 1 + 7) // 8) * 8 + 1  # snap to 8k+1
 
     pipe = get_pipeline("a2v", [])
-    images = [ImageConditioningInput(path=str(image_path), frame_idx=0, strength=1.0)]
+    # A2V signature wants raw (path, frame_idx, strength) tuples, not ImageConditioningInput.
+    images = [(str(image_path), 0, 1.0)]
 
     with torch.inference_mode():
         video, audio = pipe(
-            prompt=prompt, seed=seed,
+            prompt=prompt,
+            negative_prompt=inp.get("negative_prompt", ""),
+            seed=seed,
             height=height, width=width,
             num_frames=num_frames, frame_rate=fps,
-            images=images, audio_path=str(audio_path),
+            num_inference_steps=int(inp.get("num_inference_steps", 8)),
+            video_guider_params=MultiModalGuiderParams(),
+            images=images,
+            audio_path=str(audio_path),
             enhance_prompt=enhance_prompt,
         )
 
