@@ -139,3 +139,4 @@ pod, and they auto-appear in the `list-loras` response. No code change required.
   Swap `video_b64` for an R2/S3 upload + signed URL when you cross that.
 - **`a2v` audio currently expects WAV.** MP3/M4A/OGG should work via `av` decoding;
   test before relying on them.
+ 
