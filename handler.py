@@ -300,8 +300,9 @@ def _run_a2v(inp: dict) -> dict:
         check=True,
     )
     audio_path = stereo_audio
-    # A2V signature wants raw (path, frame_idx, strength) tuples, not ImageConditioningInput.
-    images = [(str(image_path), 0, 1.0)]
+    # Signature type hint says tuple but internal code uses img.path — use ImageConditioningInput.
+    from ltx_pipelines.utils.args import ImageConditioningInput
+    images = [ImageConditioningInput(path=str(image_path), frame_idx=0, strength=1.0)]
 
     with torch.inference_mode():
         video, audio = pipe(
